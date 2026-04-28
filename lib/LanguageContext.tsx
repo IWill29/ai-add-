@@ -28,6 +28,7 @@ interface Translations {
   logout: string;
   proPlan: string;
   newIdea: string;
+  newChat: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -53,8 +54,9 @@ const translations: Record<Language, Translations> = {
     changeLanguage: 'Mainīt valodu',
     recent: 'Nesenie',
     logout: 'Izlogoties',
-    proPlan: 'Pro plāns',
+    proPlan: 'Admin',
     newIdea: 'Jauna ideja',
+    newChat: 'Jauns čats',
   },
   EN: {
     headerTitle: 'AdStyle',
@@ -73,13 +75,14 @@ const translations: Record<Language, Translations> = {
     learnMore: 'Learn more',
     copyText: 'Copy text',
     copied: 'Copied',
-    profile: 'Profile',
+    profile: 'Profil',
     settings: 'Settings',
     changeLanguage: 'Change Language',
     recent: 'Recent',
     logout: 'Logout',
-    proPlan: 'Pro Plan',
+    proPlan: 'Admin',
     newIdea: 'New Idea',
+    newChat: 'New Chat',
   }
 };
 

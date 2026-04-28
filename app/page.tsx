@@ -10,6 +10,11 @@ export default function AdStyleMagic() {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const {
     messages,
+    chats,
+    currentChatId,
+    createNewChat,
+    selectChat,
+    deleteChat,
     input,
     setInput,
     isLoading,
@@ -37,11 +42,17 @@ export default function AdStyleMagic() {
       <main className="flex-1 flex overflow-hidden relative">
         <ChatSidebar 
           messages={messages}
+          chats={chats}
+          currentChatId={currentChatId}
+          onNewChat={createNewChat}
+          onSelectChat={selectChat}
+          onDeleteChat={deleteChat}
           isLoading={isLoading}
           onCopy={copyToClipboard}
           copiedId={copiedId}
           isOpen={isSidebarOpen}
           onClose={() => setIsSidebarOpen(false)}
+          onClear={clearHistory}
         />
         
         <AdPreview 

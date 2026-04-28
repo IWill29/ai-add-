@@ -60,38 +60,70 @@ export const AdPreview: React.FC<AdPreviewProps> = ({
       {/* Messages / Chat Flow */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 custom-scrollbar pb-40">
         <div className="w-full max-w-2xl mx-auto space-y-8">
+          {messages.length === 0 && !isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center text-center py-10 gap-4 w-full"
+            >
+              <motion.div 
+                whileHover={{ rotateY: 360, scale: 1.1 }}
+                animate={{ 
+                  y: [0, -10, 0],
+                  boxShadow: ["0 0 0px rgba(79, 70, 229, 0)", "0 0 30px rgba(79, 70, 229, 0.4)", "0 0 0px rgba(79, 70, 229, 0)"]
+                }}
+                transition={{ 
+                  y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
+                  boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+                  rotateY: { duration: 0.6 }
+                }}
+                className="w-20 h-20 md:w-24 md:h-24 text-2xl md:text-3xl italic rounded-2xl md:rounded-3xl shrink-0 flex items-center justify-center text-white font-black shadow-sm cursor-pointer bg-indigo-600"
+              >
+                FB
+              </motion.div>
+              <div className="max-w-md p-4 md:p-6 rounded-2xl md:rounded-3xl text-sm md:text-base leading-relaxed bg-transparent text-slate-800">
+                <div className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 mb-2">
+                  {t.welcomeMessage}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {messages.map((msg) => (
             <motion.div
               key={msg.id}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'} ${msg.id === 'initial' ? 'items-center text-center py-10' : ''}`}
+              className={`flex flex-col gap-2 ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
             >
-              <div className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} ${msg.id === 'initial' ? 'flex-col items-center text-center' : ''} w-full`}>
+              <div className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} w-full`}>
                 <motion.div 
                   whileHover={{ rotateY: 360, scale: 1.1 }}
-                  animate={msg.id === 'initial' ? { 
-                    y: [0, -10, 0],
-                    boxShadow: ["0 0 0px rgba(79, 70, 229, 0)", "0 0 30px rgba(79, 70, 229, 0.4)", "0 0 0px rgba(79, 70, 229, 0)"]
-                  } : {}}
-                  transition={msg.id === 'initial' ? { 
-                    y: { repeat: Infinity, duration: 3, ease: "easeInOut" },
-                    boxShadow: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                    rotateY: { duration: 0.6 }
-                  } : { rotateY: { duration: 0.6 } }}
-                  className={`${msg.id === 'initial' ? 'w-20 h-20 md:w-24 md:h-24 text-2xl md:text-3xl italic' : 'w-8 h-8 md:w-10 md:h-10 text-[10px] md:text-xs'} rounded-2xl md:rounded-3xl shrink-0 flex items-center justify-center text-white font-black shadow-sm cursor-pointer ${msg.role === 'bot' ? 'bg-indigo-600' : 'bg-orange-500'}`}
+                  transition={{ rotateY: { duration: 0.6 } }}
+                  className="w-8 h-8 md:w-10 md:h-10 text-[10px] md:text-xs rounded-2xl md:rounded-3xl shrink-0 flex items-center justify-center text-white font-black shadow-sm cursor-pointer bg-indigo-600"
                 >
                   {msg.role === 'bot' ? 'FB' : <User size={16} />}
                 </motion.div>
                 <div className={`
-                  ${msg.id === 'initial' ? 'max-w-md' : 'max-w-[85%]'} p-4 md:p-6 rounded-2xl md:rounded-3xl text-sm md:text-base leading-relaxed
+                  max-w-[85%] p-4 md:p-6 rounded-2xl md:rounded-3xl text-sm md:text-base leading-relaxed
                   ${msg.role === 'bot' 
-                    ? (msg.id === 'initial' ? 'bg-transparent text-slate-800' : 'bg-slate-100 text-slate-700 rounded-tl-none') 
+                    ? 'bg-slate-100 text-slate-700 rounded-tl-none' 
                     : 'bg-orange-500 text-white rounded-tr-none shadow-md shadow-orange-100'}
                 `}>
-                  <div className={`whitespace-pre-wrap ${msg.id === 'initial' ? 'text-xl md:text-2xl font-bold tracking-tight text-slate-900 mb-2' : ''}`}>
-                    {msg.id === 'initial' ? t.welcomeMessage : (msg.isAd ? '' : msg.content)}
+                  <div className="whitespace-pre-wrap">
+                    {msg.isAd ? '' : msg.content}
                   </div>
+                  
+                  {msg.attachmentUrl && (
+                    <div className="mt-3 rounded-xl overflow-hidden border border-white/20 shadow-sm max-w-sm">
+                      <img 
+                        src={msg.attachmentUrl} 
+                        alt="Attachment" 
+                        className="w-full h-auto object-contain max-h-60" 
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  )}
                   
                   {/* Integrated Ad Preview Card */}
                   {msg.isAd && (
@@ -253,10 +285,10 @@ export const AdPreview: React.FC<AdPreviewProps> = ({
             
             <button 
               onClick={() => fileInputRef.current?.click()}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
               title="Pievienot attēlu"
             >
-              <ImagePlus size={22} />
+              <ImagePlus size={18} />
             </button>
 
             <input 
@@ -265,20 +297,20 @@ export const AdPreview: React.FC<AdPreviewProps> = ({
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && onSend()}
               placeholder={selectedImage ? "Pievieno aprakstu vai spied sūtīt..." : t.inputPlaceholder} 
-              className="w-full pl-14 pr-14 py-4 md:py-5 bg-white border border-slate-200 rounded-2xl md:rounded-3xl shadow-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm md:text-base group-hover:border-slate-300"
+              className="w-full pl-12 pr-12 py-3 md:py-4 bg-white border border-slate-200 rounded-xl md:rounded-2xl shadow-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm group-hover:border-slate-300"
             />
             
             <button 
               onClick={onSend}
               disabled={isLoading || (!input.trim() && !selectedImage)}
               className={`
-                absolute right-2.5 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg transition-all
+                absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl flex items-center justify-center shadow-lg transition-all
                 ${isLoading || (!input.trim() && !selectedImage) 
                   ? 'bg-slate-100 text-slate-300 cursor-not-allowed shadow-none' 
                   : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'}
               `}
             >
-              <ChevronRight size={24} />
+              <ChevronRight size={20} />
             </button>
           </div>
         </div>

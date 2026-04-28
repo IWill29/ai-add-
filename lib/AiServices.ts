@@ -26,10 +26,10 @@ export const generateFacebookAd = async (
   - LIGHTING: Use terms like 'softbox lighting', 'rim light', 'volumetric fog', 'global illumination', 'cinematic backlight', 'bounced light'.
   - CAMERA: Use terms like 'Macro lens', '85mm focal length', 'f/1.8 aperture for deep bokeh', 'shot on Phase One XF'.
   - QUALITY: Always include '8k resolution, photorealistic, ray tracing, unreal engine 5 render, sharp focus, highly detailed textures'.
-  - TEXT STRICTLY FORBIDDEN: NEVER include text, letters, slogans, or labels in the imagePrompt. Focus on the visual essence and shapes only.
+  - TEXT SUPPORTED: You CAN and SHOULD include essential text, slogans, or labels in the imagePrompt if they add to the ad's effectiveness, as our model supports high-quality text rendering. Ensure any text is in English.
   - FORMAT: The imagePrompt must be in English.
   - LENGTH: 60-80 words for maximum detail and realism.
- 
+  
   ${context ? `CONTEXT FROM PRODUCT WEBSITE:\n${context}` : ''}
   ${imageBase64 ? `IMAGE ANALYSIS: Look at the attached image carefully. It shows the actual product. Use its visual features (color, shape, material, logo details) to write the copy and create a matching image prompt.` : ''}
   
@@ -64,59 +64,99 @@ export const generateFacebookAd = async (
     }
   ];
 
-  const response = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: contents as any,
-    config: {
-      temperature: 0.8,
-      topP: 0.95,
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          adContent: { type: Type.STRING },
-          imagePrompt: { type: Type.STRING }
-        },
-        required: ["adContent", "imagePrompt"]
+  // Fallback models for text generation
+  const models = ["gemini-3-flash-preview", "gemini-flash-latest", "gemini-3.1-pro-preview"];
+  let lastError = null;
+
+  for (const modelName of models) {
+    try {
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents: contents as any,
+        config: {
+          temperature: 0.8,
+          topP: 0.95,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              adContent: { type: Type.STRING },
+              imagePrompt: { type: Type.STRING }
+            },
+            required: ["adContent", "imagePrompt"]
+          }
+        }
+      });
+
+      const text = response.text;
+      if (text) {
+        return JSON.parse(text);
       }
+    } catch (error) {
+      console.warn(`Model ${modelName} failed, trying next...`, error);
+      lastError = error;
     }
-  });
-
-  const text = response.text;
-  if (!text) {
-    return { adContent: "Atvainojiet, nevarēju ģenerēt reklāmu.", imagePrompt: userInput };
   }
 
-  try {
-    return JSON.parse(text);
-  } catch (e) {
-    console.error("Failed to parse AI response", e);
-    return { adContent: text, imagePrompt: userInput };
-  }
+  // If all models fail
+  console.error("All text models failed:", lastError);
+  return { adContent: "Atvainojiet, visi modeļi pašlaik ir pārslogoti. Lūdzu, mēģiniet vēlreiz pēc brīža.", imagePrompt: userInput };
 };
 
 export const generateImage = async (prompt: string) => {
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: {
-      parts: [
-        {
-          text: `Professional advertisement photography, ultra-high resolution, 8k, cinematic studio lighting, commercial product shot, sharp focus, vibrant colors, premium quality. Subject: ${prompt}`,
-        },
-      ],
-    },
-    config: {
-      imageConfig: {
-        aspectRatio: "16:9",
+  // Try gemini-2.5-flash-image first (recommended default)
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          {
+            text: `Professional advertisement photography, ultra-high resolution, 8k, cinematic studio lighting, commercial product shot, sharp focus, vibrant colors, premium quality. Subject: ${prompt}`,
+          },
+        ],
       },
-    },
-  });
+      config: {
+        imageConfig: {
+          aspectRatio: "16:9",
+        },
+      },
+    });
 
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData?.data) {
-      const base64EncodeString: string = part.inlineData.data;
-      return `data:image/png;base64,${base64EncodeString}`;
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData?.data) {
+        const base64EncodeString: string = part.inlineData.data;
+        return `data:image/png;base64,${base64EncodeString}`;
+      }
+    }
+  } catch (error) {
+    console.warn("gemini-2.5-flash-image failed, trying imagen fallback...", error);
+  }
+
+  // Fallback models for image generation (Imagen)
+  const imageModels = ['imagen-3.0-generate-001', 'imagen-3.0-fast-generate-001', 'imagen-4.0-generate-001'];
+  let lastError = null;
+
+  for (const modelId of imageModels) {
+    try {
+      const response = await ai.models.generateImages({
+        model: modelId,
+        prompt: `Professional advertisement photography, ultra-high resolution, 8k, cinematic studio lighting, commercial product shot, sharp focus, vibrant colors, premium quality. Subject: ${prompt}`,
+        config: {
+          numberOfImages: 1,
+          aspectRatio: "16:9",
+        },
+      });
+
+      const imageBytes = response.generatedImages?.[0]?.image?.imageBytes;
+      if (imageBytes) {
+        return `data:image/png;base64,${imageBytes}`;
+      }
+    } catch (error) {
+      console.warn(`Image model ${modelId} failed, trying next...`, error);
+      lastError = error;
     }
   }
+
+  console.error("All image models failed:", lastError);
   return null;
 };

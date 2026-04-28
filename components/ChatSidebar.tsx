@@ -2,27 +2,39 @@
 
 import React, { useRef, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Copy, Check, ChevronRight, Sparkles, X, Settings, Languages, LogOut, ChevronUp } from 'lucide-react';
+import { User, Copy, Check, ChevronRight, Sparkles, X, Settings, Languages, LogOut, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { Message } from '@/lib/types';
 
 import { useLanguage } from '@/lib/LanguageContext';
 
 interface ChatSidebarProps {
   messages: Message[];
+  chats: any[];
+  currentChatId: string | null;
+  onNewChat: () => void;
+  onSelectChat: (id: string) => void;
+  onDeleteChat: (id: string) => void;
   isLoading: boolean;
   onCopy: (text: string, id: string) => void;
   copiedId: string | null;
   isOpen: boolean;
   onClose: () => void;
+  onClear: () => void;
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   messages,
+  chats,
+  currentChatId,
+  onNewChat,
+  onSelectChat,
+  onDeleteChat,
   isLoading,
   onCopy,
   copiedId,
   isOpen,
-  onClose
+  onClose,
+  onClear
 }) => {
   const { t, language, setLanguage } = useLanguage();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -49,43 +61,61 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         transition-transform duration-300 ease-in-out md:translate-x-0
         ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        <div className="p-4 border-b border-slate-100 flex items-center justify-end">
+        <div className="p-3 flex items-center">
           <button 
             onClick={onClose}
-            className="p-2 text-slate-400 hover:text-slate-600 md:hidden"
+            className="p-1 text-slate-400 hover:text-slate-600 md:hidden"
           >
-            <X size={20} />
+            <X size={16} />
+          </button>
+          
+          <button 
+            onClick={onNewChat}
+            className="ml-auto flex items-center justify-center w-7 h-7 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-sm active:scale-95"
+            title={t.newChat}
+          >
+            <Plus size={14} strokeWidth={3} />
           </button>
         </div>
 
-      <div className="flex-1 p-3 overflow-y-auto custom-scrollbar">
-        <div className="px-3 mb-4">
-          <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.recent}</h3>
+      <div className="flex-1 p-2 overflow-y-auto custom-scrollbar">
+        <div className="px-3 mb-2">
+          <h3 className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{t.recent}</h3>
         </div>
         
         <div className="space-y-1">
-          {messages.length > 0 && (
-            <button className="w-full text-left px-3 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm text-sm font-medium text-slate-700 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-indigo-500" />
-              <span className="truncate flex-1">
-                {messages.find(m => m.role === 'user')?.content || t.newIdea}
-              </span>
-            </button>
-          )}
-          
-          {/* Mock history items to show the look */}
-          <button className="w-full text-left px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-200/50 rounded-xl transition-colors flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-slate-300" />
-            <span className="truncate flex-1">Apavu veikala kampaņa</span>
-          </button>
-          <button className="w-full text-left px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-200/50 rounded-xl transition-colors flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-slate-300" />
-            <span className="truncate flex-1">Vasaras izpārdošana</span>
-          </button>
+          {chats.filter(chat => (chat._count?.messages || 0) > 0).map((chat) => (
+            <div key={chat.id} className="group relative">
+              <button 
+                onClick={() => onSelectChat(chat.id)}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg border transition-all duration-200 text-sm font-medium flex items-center gap-2 ${
+                  currentChatId === chat.id 
+                    ? 'bg-white border-indigo-100 shadow-sm text-indigo-600' 
+                    : 'bg-transparent border-transparent text-slate-600 hover:bg-white hover:border-slate-100'
+                }`}
+              >
+                <div className={`w-1.5 h-1.5 rounded-full ${currentChatId === chat.id ? 'bg-indigo-500' : 'bg-slate-300'}`} />
+                <span className="truncate flex-1 pr-5">
+                  {chat.title}
+                </span>
+              </button>
+              
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteChat(chat.id);
+                }}
+                className={`absolute right-1.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all opacity-0 group-hover:opacity-100 ${currentChatId === chat.id ? 'opacity-100' : ''}`}
+                title="Dzēst čatu"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="p-4 border-t border-slate-200 bg-white relative">
+      <div className="p-3 border-t border-slate-200 bg-white relative">
         <AnimatePresence>
           {isProfileOpen && (
             <>
@@ -97,24 +127,24 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                className="absolute bottom-full left-4 right-4 mb-2 bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden z-40 divide-y divide-slate-100"
+                className="absolute bottom-full left-3 right-3 mb-2 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-40 divide-y divide-slate-100"
               >
-                <div className="p-2">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-slate-600 hover:bg-slate-50 rounded-2xl transition-colors">
-                    <Settings size={18} className="text-slate-400" />
+                <div className="p-1.5">
+                  <button className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
+                    <Settings size={16} className="text-slate-400" />
                     <span className="font-medium">{t.settings}</span>
                   </button>
                   
                   <div className="relative">
                     <button 
                       onClick={() => setShowLanguages(!showLanguages)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm rounded-2xl transition-all duration-300 ${
+                      className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs rounded-xl transition-all duration-300 ${
                         showLanguages ? 'bg-indigo-50 text-indigo-600' : 'text-slate-600 hover:bg-slate-50'
                       }`}
                     >
-                      <Languages size={18} className={showLanguages ? 'text-indigo-500' : 'text-slate-400'} />
+                      <Languages size={16} className={showLanguages ? 'text-indigo-500' : 'text-slate-400'} />
                       <span className="font-medium flex-1 text-left">{t.changeLanguage}</span>
-                      <ChevronRight size={14} className={`transition-transform duration-300 ${showLanguages ? 'rotate-90' : ''}`} />
+                      <ChevronRight size={12} className={`transition-transform duration-300 ${showLanguages ? 'rotate-90' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -145,9 +175,12 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   </div>
                 </div>
 
-                <div className="p-2">
-                  <button className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-red-50 rounded-2xl transition-colors">
-                    <LogOut size={18} />
+                <div className="p-1.5">
+                  <button 
+                    onClick={onClear}
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+                  >
+                    <LogOut size={16} />
                     <span className="font-bold">{t.logout}</span>
                   </button>
                 </div>
@@ -158,18 +191,18 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
         <button 
           onClick={() => setIsProfileOpen(!isProfileOpen)}
-          className={`w-full flex items-center gap-3 px-2 py-2 rounded-2xl transition-all duration-300 ${
+          className={`w-full flex items-center gap-2 px-1.5 py-1.5 rounded-xl transition-all duration-300 ${
             isProfileOpen ? 'bg-slate-100' : 'hover:bg-slate-50'
           }`}
         >
-          <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white text-xs font-bold shadow-sm">
-            AK
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+            <User size={18} />
           </div>
           <div className="flex-1 min-w-0 text-left">
-            <div className="text-sm font-bold text-slate-900 truncate">Agnis Kulakovs</div>
-            <div className="text-[10px] text-slate-500 font-medium uppercase tracking-wider">{t.proPlan}</div>
+            <div className="text-xs font-bold text-slate-900 truncate">Admin</div>
+            <div className="text-[9px] text-slate-500 font-medium uppercase tracking-wider">{t.proPlan}</div>
           </div>
-          <ChevronUp size={16} className={`text-slate-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
+          <ChevronUp size={14} className={`text-slate-400 transition-transform duration-300 ${isProfileOpen ? 'rotate-180' : ''}`} />
         </button>
       </div>
 

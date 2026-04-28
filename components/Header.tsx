@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ChevronDown, Languages, Menu, User, Settings, LogOut, Check } from 'lucide-react';
+import React from 'react';
+import { motion } from 'motion/react';
+import { Menu } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 
 interface HeaderProps {
@@ -11,9 +11,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({ onToggleSidebar, onClearHistory }) => {
-  const { language, setLanguage, t } = useLanguage();
-  const [isOpen, setIsOpen] = useState(false);
-  const [showLanguages, setShowLanguages] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-8 flex items-center justify-between shadow-sm shrink-0 z-50">
