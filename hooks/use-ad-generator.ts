@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Message } from '@/lib/types';
-import { generateFacebookAd, generateImage } from '@/lib/ai-service';
+import { generateFacebookAd, generateImage } from '@/lib/AiServices';
 import { useLanguage } from '@/lib/LanguageContext';
 
 export const useAdGenerator = () => {

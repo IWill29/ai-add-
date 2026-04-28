@@ -21,6 +21,13 @@ interface Translations {
   learnMore: string;
   copyText: string;
   copied: string;
+  profile: string;
+  settings: string;
+  changeLanguage: string;
+  recent: string;
+  logout: string;
+  proPlan: string;
+  newIdea: string;
 }
 
 const translations: Record<Language, Translations> = {
@@ -41,6 +48,13 @@ const translations: Record<Language, Translations> = {
     learnMore: 'Uzzini vairāk',
     copyText: 'Kopēt tekstu',
     copied: 'Nokopēts',
+    profile: 'Profils',
+    settings: 'Iestatījumi',
+    changeLanguage: 'Mainīt valodu',
+    recent: 'Nesenie',
+    logout: 'Izlogoties',
+    proPlan: 'Pro plāns',
+    newIdea: 'Jauna ideja',
   },
   EN: {
     headerTitle: 'AdStyle',
@@ -59,6 +73,13 @@ const translations: Record<Language, Translations> = {
     learnMore: 'Learn more',
     copyText: 'Copy text',
     copied: 'Copied',
+    profile: 'Profile',
+    settings: 'Settings',
+    changeLanguage: 'Change Language',
+    recent: 'Recent',
+    logout: 'Logout',
+    proPlan: 'Pro Plan',
+    newIdea: 'New Idea',
   }
 };
 

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { User, Sparkles, Globe, MoreHorizontal, Download, Facebook, ChevronRight, ImagePlus, X } from 'lucide-react';
+import { User, Sparkles, Globe, MoreHorizontal, Download, Facebook, ChevronRight, ImagePlus, X, Check } from 'lucide-react';
 import { useLanguage } from '@/lib/LanguageContext';
 import { Message } from '@/lib/types';
 
@@ -90,58 +90,99 @@ export const AdPreview: React.FC<AdPreviewProps> = ({
                     : 'bg-orange-500 text-white rounded-tr-none shadow-md shadow-orange-100'}
                 `}>
                   <div className={`whitespace-pre-wrap ${msg.id === 'initial' ? 'text-xl md:text-2xl font-bold tracking-tight text-slate-900 mb-2' : ''}`}>
-                    {msg.id === 'initial' ? t.welcomeMessage : msg.content}
+                    {msg.id === 'initial' ? t.welcomeMessage : (msg.isAd ? '' : msg.content)}
                   </div>
                   
+                  {/* Integrated Ad Preview Card */}
+                  {msg.isAd && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      className="w-full max-w-lg mt-4 bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-200"
+                    >
+                      <div className="p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">BRAND</div>
+                        <div className="flex-1">
+                          <div className="font-bold text-slate-900 text-sm">{t.brandName}</div>
+                          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                            {t.sponsored} • <Globe size={11} />
+                          </div>
+                        </div>
+                        <button className="text-slate-400 hover:text-slate-600 transition-colors">
+                          <MoreHorizontal size={20} />
+                        </button>
+                      </div>
 
-                  {/* User attachment in chat bubble */}
-                  {msg.attachmentUrl && (
-                    <div className="mt-3 rounded-xl overflow-hidden border border-white/20 bg-white/10 p-1">
-                      <img 
-                        src={msg.attachmentUrl} 
-                        alt="Attached product" 
-                        className="w-full max-h-60 object-contain rounded-lg"
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
+                      {/* The Ad Text Content (Presentation) */}
+                      <div className="px-4 pb-4 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {msg.content}
+                      </div>
+                      
+                      <div className="aspect-video bg-slate-100 relative flex items-center justify-center overflow-hidden group/ad-card">
+                        {msg.imageUrl ? (
+                          <>
+                            <img 
+                              src={msg.imageUrl} 
+                              alt="Ad Visual" 
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                            {msg.id === activeMessageId && (
+                              <button 
+                                onClick={() => onRegenerateImage(msg.id, msg.imagePrompt || undefined)}
+                                disabled={isRegeneratingImage}
+                                className="absolute bottom-4 right-4 bg-white/20 backdrop-blur-xl hover:bg-white/40 text-white border border-white/30 px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-xl opacity-0 group-hover/ad-card:opacity-100"
+                              >
+                                <Sparkles size={14} className={isRegeneratingImage ? 'animate-spin' : ''} />
+                                {isRegeneratingImage ? 'Ģenerē...' : 'Cita bilde'}
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <div className="flex flex-col items-center gap-3">
+                            <motion.div 
+                              animate={{ rotate: 360 }} 
+                              transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                              className="text-slate-300"
+                            >
+                              <Sparkles size={32} />
+                            </motion.div>
+                            <span className="text-xs text-slate-400 font-medium tracking-wide">Meklējam labāko bildi...</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="bg-slate-50 p-4 border-t border-slate-100 flex items-center justify-between">
+                        <div className="flex-1 pr-4 min-w-0">
+                          <div className="text-[9px] text-slate-500 uppercase font-black tracking-widest">WWW.WEBSITE.COM</div>
+                          <div className="font-bold text-slate-900 text-xs truncate">Check it out now!</div>
+                        </div>
+                        <button className="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-lg font-bold text-[10px] text-slate-700 transition-colors whitespace-nowrap">
+                          {t.learnMore}
+                        </button>
+                      </div>
+
+                      <div className="p-3 bg-slate-50 border-t border-slate-100 flex gap-2">
+                        <button 
+                          onClick={() => onCopy(msg.content, msg.id)}
+                          className="flex-1 flex items-center justify-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 hover:border-indigo-500 transition-all text-slate-700 text-xs font-bold"
+                        >
+                          {copiedId === msg.id ? <Check size={14} className="text-green-500" /> : <Download size={14} className="text-indigo-600" />}
+                          {copiedId === msg.id ? t.copied : t.download}
+                        </button>
+                        <button className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 px-3 py-2 rounded-xl text-white text-xs font-bold hover:bg-indigo-700 transition-all">
+                          <Facebook size={14} />
+                          {t.share}
+                        </button>
+                      </div>
+                    </motion.div>
                   )}
+                  
+
                 </div>
               </div>
               
-                  {/* Image in chat if available */}
-              {msg.imageUrl && (
-                <div className="flex flex-col gap-2 ml-12 md:ml-14 mt-2">
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="max-w-[300px] rounded-2xl overflow-hidden shadow-lg border border-slate-200 bg-white p-1"
-                  >
-                    <div className="relative group/img">
-                      <img 
-                        src={msg.imageUrl} 
-                        alt="Generated concept" 
-                        className="w-full h-auto rounded-xl"
-                        referrerPolicy="no-referrer"
-                      />
-                      {msg.role === 'bot' && msg.imagePrompt && (
-                        <button 
-                          onClick={() => onRegenerateImage(msg.id)}
-                          disabled={isRegeneratingImage}
-                          className="absolute bottom-2 right-2 p-2 bg-black/50 backdrop-blur-md text-white rounded-lg opacity-0 group-hover/img:opacity-100 transition-opacity hover:bg-black/70 disabled:opacity-50"
-                          title="Atjaunot vizuāli"
-                        >
-                          <Sparkles size={16} className={isRegeneratingImage ? 'animate-spin' : ''} />
-                        </button>
-                      )}
-                    </div>
-                    <div className="p-2 flex items-center gap-2 text-[10px] text-slate-400 font-medium">
-                      <Sparkles size={12} className="text-indigo-500" />
-                      AI Ģenerēts vizuālis
-                    </div>
-                  </motion.div>
-                </div>
-              )}
-            </motion.div>
+                </motion.div>
           ))}
 
           {isLoading && (
@@ -175,89 +216,6 @@ export const AdPreview: React.FC<AdPreviewProps> = ({
             </div>
           )}
 
-          {activeAd && !isLoading && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              className="w-full max-w-lg mx-auto py-8"
-            >
-              <div className="flex items-center justify-between mb-4 px-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t.previewButton}</span>
-              </div>
-              
-              <div className="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
-                <div className="p-4 flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-white text-[10px] font-bold">BRAND</div>
-                  <div className="flex-1">
-                    <div className="font-bold text-slate-900 text-sm">{t.brandName}</div>
-                    <div className="text-[10px] text-slate-500 flex items-center gap-1">
-                      {t.sponsored} • <Globe size={11} />
-                    </div>
-                  </div>
-                  <button className="text-slate-400 hover:text-slate-600 transition-colors">
-                    <MoreHorizontal size={20} />
-                  </button>
-                </div>
-                
-                <div className="aspect-video bg-slate-100 relative flex items-center justify-center overflow-hidden group/active">
-                  {activeImageUrl ? (
-                    <>
-                      <img 
-                        src={activeImageUrl} 
-                        alt="Ad Visual" 
-                        className="w-full h-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                      {activeMessageId && (
-                        <button 
-                          onClick={() => onRegenerateImage(activeMessageId, activeImagePrompt || undefined)}
-                          disabled={isRegeneratingImage}
-                          className="absolute bottom-4 right-4 bg-white/20 backdrop-blur-xl hover:bg-white/40 text-white border border-white/30 px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-bold transition-all shadow-xl opacity-0 group-hover/active:opacity-100"
-                        >
-                          <Sparkles size={14} className={isRegeneratingImage ? 'animate-spin' : ''} />
-                          {isRegeneratingImage ? 'Ģenerē...' : 'Cita bilde'}
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-orange-400 opacity-20" />
-                      <div className="text-white text-center z-10 px-6">
-                        <h2 className="text-2xl md:text-3xl lg:text-4xl font-black italic tracking-tighter mb-2 uppercase drop-shadow-md">Gatavi rezultātam?</h2>
-                        <div className="bg-white/20 backdrop-blur-md px-4 py-1.5 rounded-full font-bold border border-white/30 uppercase text-[9px] tracking-widest">AdStyle AI Magic</div>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                <div className="bg-slate-50 p-4 border-t border-slate-100 flex items-center justify-between">
-                  <div className="flex-1 pr-4 min-w-0">
-                    <div className="text-[9px] text-slate-500 uppercase font-black tracking-widest">WWW.WEBSITE.COM</div>
-                    <div className="font-bold text-slate-900 text-xs truncate">Check it out now!</div>
-                  </div>
-                  <button className="bg-slate-200 hover:bg-slate-300 px-4 py-2 rounded-lg font-bold text-[10px] text-slate-700 transition-colors whitespace-nowrap">
-                    {t.learnMore}
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6 justify-center">
-                <button 
-                  onClick={() => onCopy(activeAd || '', 'active-ad')}
-                  className="flex-1 max-w-[160px] flex items-center justify-center gap-2 bg-white px-4 py-3 rounded-2xl shadow-lg border border-slate-200 hover:border-indigo-500 transition-all text-slate-700"
-                >
-                  <Download size={18} className="text-indigo-600" />
-                  <span className="font-bold text-sm">{t.download}</span>
-                </button>
-                <button 
-                  className="flex-1 max-w-[160px] flex items-center justify-center gap-2 bg-indigo-600 px-4 py-3 rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all text-white"
-                >
-                  <Facebook size={18} />
-                  <span className="font-bold text-sm">{t.share}</span>
-                </button>
-              </div>
-            </motion.div>
-          )}
           <div ref={messagesEndRef} />
         </div>
       </div>
